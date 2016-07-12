@@ -1,0 +1,24 @@
+{
+  "name": "swaggitor-language-server",
+  "version": "0.1.0",
+  "description": "Swaggitor language server for Visual Studio Code",
+  "publisher": "qnsolutions",
+  "main": "./src/main.ts",
+  "scripts": {
+    "compile": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -p .",
+    "watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc --watch -p ."
+  },
+  "author": "Christian Kuhn <c.kuhn@qn-solutions.de> (http://www.qn-solutions.de)",
+  "license": "MIT",
+  "engines": {
+    "node": "*"
+  },
+  "dependencies": {
+    "js-yaml": "^3.6.1",
+    "swagger-parser": "^4.0.0-beta.2",
+    "vscode-languageserver": "^2.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^1.8.10"
+  }
+}
