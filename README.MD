@@ -6,6 +6,7 @@ Current features are:
 - Validate YAML and JSON files.
 - Files are validated upon saving.
 - Shows syntax and indentation errors.
+- Handles $refs to external files, when validating
 
 Support for code completion is implemented, but we still lack a list of Swagger keywords containing:
 - keywords
