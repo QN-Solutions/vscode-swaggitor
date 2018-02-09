@@ -1,14 +1,15 @@
 'use strict';
 
 import {
-    IPCMessageReader, IPCMessageWriter, createConnection, IConnection, TextDocumentSyncKind, TextDocuments,
-    TextDocument, Diagnostic, DiagnosticSeverity, InitializeParams, InitializeResult, TextDocumentPositionParams,
-    CompletionItem, CompletionItemKind
+	IPCMessageReader, IPCMessageWriter, createConnection, IConnection,  TextDocuments, 
+	TextDocument, DiagnosticSeverity, Diagnostic, InitializeResult,
+	TextDocumentPositionParams, CompletionItem, CompletionItemKind
 } from 'vscode-languageserver';
 
 var SwaggerParser = require('swagger-parser');
 var YamlJS = require('js-yaml');
 
+/* unused
 // Type definition for extension settings
 interface Settings {
     languageServerSettings: SwaggitorSettings;
@@ -17,6 +18,7 @@ interface Settings {
 interface SwaggitorSettings {
     // empty for now
 }
+*/
 
 // Create IPC connection
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
@@ -26,33 +28,38 @@ let documents: TextDocuments = new TextDocuments();
 documents.listen(connection);
 
 // Root path of the workspaceRoot
-let workspaceRoot: string;
+// unused
+// let workspaceRoot: string;
 
 /**
  * Initialize the language server.
  */
-connection.onInitialize((params): InitializeResult => {
-    workspaceRoot = params.rootPath;
-
-    // return server caps
-    return {
-        capabilities: {
-            textDocumentSync: documents.syncKind,
-            completionProvider: {
-                resolveProvider: true
-            }
-        }
-    }
+connection.onInitialize((_params): InitializeResult => {
+	// unused
+	workspaceRoot = params.rootPath;
+	// return server caps
+	return {
+		capabilities: {
+			textDocumentSync: documents.syncKind,
+			completionProvider: {
+				resolveProvider: true
+			}
+		}
+	}
 });
 
 /**
  * Configuration change event.
  */
-connection.onDidChangeConfiguration((change) => {
+connection.onDidChangeConfiguration((_change) => {
     // cast the settings to the defined interface type
-    let newSettings = <Settings>change.settings;
+	// unused
+    // let newSettings = <Settings>change.settings;
 
-    // read in the individual configuration settings here
+	// read in the individual configuration settings here
+	
+	// Revalidate any open text documents
+	// documents.all().forEach(validateTextDocument);
 });
 
 /**
@@ -100,25 +107,34 @@ function isSwaggerDocument(document: TextDocument) : boolean
  * Handle event triggered when the document was saved.
  */
 documents.onDidSave((saveObj) => {
+	validateTextDocument(saveObj.document);
+});
 
-    if(isSwaggerDocument(saveObj.document))
+function validateTextDocument(textDocument: TextDocument): void {
+	if(isSwaggerDocument(textDocument))
     {
+		// issue #1
+		let documentUri = textDocument.uri;
+		if (/^win/.test(process.platform)) {
+			documentUri = decodeURIComponent(documentUri);
+		}
+
         // parse the file on save and send diagnostics about any parser error to the language client.
-        SwaggerParser.parse(saveObj.document.uri).then(function(api) {
+        SwaggerParser.parse(documentUri).then(function(_api: any) {
             // empty the diagnostics information since swagger defintion seems to be correct
             let diagnostics: Diagnostic[] = [];
             connection.sendDiagnostics({
-                uri: saveObj.document.uri,
+                uri: textDocument.uri,
                 diagnostics
             });
             // notify the client to display status bar message
-            connection.sendRequest({method: "validated"}, null);
-        }).catch(function(err) {
+            connection.sendRequest("validated", null);
+        }).catch(function(err: any) {
             // generate diagnostics information containing error information
             let diagnostics: Diagnostic[] = [];
             var diagnostic = {
                 code: 0,
-                message: err.message,
+                message: err.reason,
                 range: {
                     start: {
                         line: 0,
@@ -142,20 +158,20 @@ documents.onDidSave((saveObj) => {
             diagnostics.push(diagnostic);
             
             connection.sendDiagnostics({
-                uri: saveObj.document.uri,
+                uri: textDocument.uri,
                 diagnostics
             });
 
             // trigger client to display status bar message
-            connection.sendRequest({method: "validated"}, err);
-        })
+            connection.sendRequest("validated", err);
+		})
     }
-});
+}
 
 /**
  * Provide completion items.
  */
-connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+connection.onCompletion((_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
     return swaggerCodeCompleteDefs;
 });
 
