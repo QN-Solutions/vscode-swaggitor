@@ -7,7 +7,7 @@ import {
 } from 'vscode';
 
 import {
-    LanguageClient, LanguageClientOptions, SettingMonitor, ServerOptions, TransportKind
+    LanguageClient, LanguageClientOptions, ServerOptions, TransportKind
 } from 'vscode-languageclient';
 
 var YamlJS = require('js-yaml');
@@ -58,19 +58,19 @@ function isSwaggerDocument(document: TextDocument) : boolean
  */
 export function activate(context: ExtensionContext) {
 
-    // build path to server module
-    let serverModule = context.asAbsolutePath(path.join('server', 'main.js'));
-
-    // server debug options
+	// build path to server module
+	let serverModule = context.asAbsolutePath(path.join('server', 'main.js'));
+	
+	// server debug options
     let debugOptions = {
         execArgv: [
             "--nolazy",
-            "--debug=6004"
+            "--inspect=6004"
         ]
     };
-
-    // create server options
-    let serverOptions = {
+	
+	// create server options
+    let serverOptions: ServerOptions = {
         run: {
             module: serverModule,
             transport: TransportKind.ipc
@@ -80,34 +80,40 @@ export function activate(context: ExtensionContext) {
             transport: TransportKind.ipc,
             options: debugOptions
         }
-    }
-
-    // create client options
-    let clientOptions = {
-        documentSelector: ['yaml', 'yml', 'json'],
+	}
+	
+	// create client options
+    let clientOptions: LanguageClientOptions = {
+        documentSelector: [
+			{scheme: 'file', language: 'yaml'},
+			{scheme: 'file', language: 'yml'},
+			{scheme: 'file', language: 'json'}
+		],
         synchronize: {
-            configurationSection: "swaggitorServerSettings",
+            configurationSection: "swaggitor",
             fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
         }
-    };
-    
-    // check if this is a swagger definition at all
-    if(isSwaggerDocument(window.activeTextEditor.document) == false)
-        return;
-    
-    let languageClient = new LanguageClient('Swaggitor', serverOptions, clientOptions);
+	};
+	
+	// check if this is a swagger definition at all
+	if ( (null == window.activeTextEditor) || (isSwaggerDocument(window.activeTextEditor.document) == false) )
+		return;
 
-    // add a request to handle displaying a status bar message after validation
-    languageClient.onRequest({method: "validated"}, (params: any) : void => {
-        if (params != null) {
-            window.setStatusBarMessage(params.message, 2000);
-        }
-        else {
-            window.setStatusBarMessage('Swagger definition is valid!', 2000);
-        }
+	let languageClient = new LanguageClient('swaggitor', 'Swaggitor Server', serverOptions, clientOptions);
+
+    languageClient.onReady().then(() => {
+        // add a request to handle displaying a status bar message after validation
+        languageClient.onRequest("validated", (params: any) : void => {
+            if (params != null) {
+                window.setStatusBarMessage(params.message, 2000);
+            }
+            else {
+                window.setStatusBarMessage('Swagger definition is valid!', 2000);
+            }
+        });
     });
 
-    let disposable = languageClient.start();
+    let disposable :Disposable = languageClient.start();
 
-    context.subscriptions.push(disposable);
+	context.subscriptions.push(disposable);
 }
