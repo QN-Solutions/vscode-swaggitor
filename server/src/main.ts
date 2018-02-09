@@ -1,9 +1,9 @@
 'use strict';
 
 import {
-	IPCMessageReader, IPCMessageWriter, createConnection, IConnection,  TextDocuments, 
-	TextDocument, DiagnosticSeverity, Diagnostic, InitializeResult,
-	TextDocumentPositionParams, CompletionItem, CompletionItemKind
+    IPCMessageReader, IPCMessageWriter, createConnection, IConnection, TextDocuments,
+    TextDocument, DiagnosticSeverity, Diagnostic, InitializeResult,
+    TextDocumentPositionParams, CompletionItem, CompletionItemKind
 } from 'vscode-languageserver';
 
 var SwaggerParser = require('swagger-parser');
@@ -35,17 +35,17 @@ documents.listen(connection);
  * Initialize the language server.
  */
 connection.onInitialize((_params): InitializeResult => {
-	// unused
-	workspaceRoot = params.rootPath;
-	// return server caps
-	return {
-		capabilities: {
-			textDocumentSync: documents.syncKind,
-			completionProvider: {
-				resolveProvider: true
-			}
-		}
-	}
+    // unused
+    workspaceRoot = params.rootPath;
+    // return server caps
+    return {
+        capabilities: {
+            textDocumentSync: documents.syncKind,
+            completionProvider: {
+                resolveProvider: true
+            }
+        }
+    }
 });
 
 /**
@@ -53,27 +53,26 @@ connection.onInitialize((_params): InitializeResult => {
  */
 connection.onDidChangeConfiguration((_change) => {
     // cast the settings to the defined interface type
-	// unused
+    // unused
     // let newSettings = <Settings>change.settings;
 
-	// read in the individual configuration settings here
-	
-	// Revalidate any open text documents
-	// documents.all().forEach(validateTextDocument);
+    // read in the individual configuration settings here
+
+    // Revalidate any open text documents
+    // documents.all().forEach(validateTextDocument);
 });
 
 /**
  * Checks if a document is actually a swagger document.
  */
-function isSwaggerDocument(document: TextDocument) : boolean
-{
+function isSwaggerDocument(document: TextDocument): boolean {
     try {
         switch (document.languageId) {
             case "json":
                 // try parsing it
                 var sourceObject = JSON.parse(document.getText());
                 // and if parsing succeeds check for the swagger version key
-                if(typeof sourceObject !== 'object' || !sourceObject.swagger)
+                if (typeof sourceObject !== 'object' || !sourceObject.swagger)
                     return false;
                 else
                     return true;
@@ -82,7 +81,7 @@ function isSwaggerDocument(document: TextDocument) : boolean
                 // try parsing it
                 var sourceObject = YamlJS.safeLoad(document.getText());
                 // and if parsing succeeds check for the swagger version key
-                if(typeof sourceObject !== 'object' || !sourceObject.swagger)
+                if (typeof sourceObject !== 'object' || !sourceObject.swagger)
                     return false;
                 else
                     return true;
@@ -90,13 +89,13 @@ function isSwaggerDocument(document: TextDocument) : boolean
                 return false;
         }
     }
-    catch(exc) {
+    catch (exc) {
         // if parsing the document fails try looking for the swagger key
         var sourceText = document.getText().toLowerCase();
-        
+
         // if the swagger key cannot be found return false. otherwise assume this is a swagger file
         // and just formatting or syntax errors prevent parsing.
-        if(sourceText.indexOf("swagger") != -1)
+        if (sourceText.indexOf("swagger") != -1)
             return true;
         else
             return false;
@@ -107,20 +106,19 @@ function isSwaggerDocument(document: TextDocument) : boolean
  * Handle event triggered when the document was saved.
  */
 documents.onDidSave((saveObj) => {
-	validateTextDocument(saveObj.document);
+    validateTextDocument(saveObj.document);
 });
 
 function validateTextDocument(textDocument: TextDocument): void {
-	if(isSwaggerDocument(textDocument))
-    {
-		// issue #1
-		let documentUri = textDocument.uri;
-		if (/^win/.test(process.platform)) {
-			documentUri = decodeURIComponent(documentUri);
-		}
+    if (isSwaggerDocument(textDocument)) {
+        // issue #1
+        let documentUri = textDocument.uri;
+        if (/^win/.test(process.platform)) {
+            documentUri = decodeURIComponent(documentUri);
+        }
 
         // parse the file on save and send diagnostics about any parser error to the language client.
-        SwaggerParser.parse(documentUri).then(function(_api: any) {
+        SwaggerParser.parse(documentUri).then(function (_api: any) {
             // empty the diagnostics information since swagger defintion seems to be correct
             let diagnostics: Diagnostic[] = [];
             connection.sendDiagnostics({
@@ -129,7 +127,7 @@ function validateTextDocument(textDocument: TextDocument): void {
             });
             // notify the client to display status bar message
             connection.sendRequest("validated", null);
-        }).catch(function(err: any) {
+        }).catch(function (err: any) {
             // generate diagnostics information containing error information
             let diagnostics: Diagnostic[] = [];
             var diagnostic = {
@@ -148,7 +146,7 @@ function validateTextDocument(textDocument: TextDocument): void {
                 source: "Swaggitor"
             };
             // if there are error marks provided by the parser use them to mark the error in source
-            if(err.mark) {
+            if (err.mark) {
                 diagnostic.range.start = diagnostic.range.end = {
                     line: err.mark.line,
                     character: err.mark.column
@@ -156,7 +154,7 @@ function validateTextDocument(textDocument: TextDocument): void {
             }
 
             diagnostics.push(diagnostic);
-            
+
             connection.sendDiagnostics({
                 uri: textDocument.uri,
                 diagnostics
@@ -164,7 +162,7 @@ function validateTextDocument(textDocument: TextDocument): void {
 
             // trigger client to display status bar message
             connection.sendRequest("validated", err);
-		})
+        })
     }
 }
 
