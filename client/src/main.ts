@@ -10,48 +10,6 @@ import {
     LanguageClient, LanguageClientOptions, ServerOptions, TransportKind
 } from 'vscode-languageclient';
 
-var YamlJS = require('js-yaml');
-
-/**
- * Checks if a document is actually a swagger document.
- */
-function isSwaggerDocument(document: TextDocument): boolean {
-    try {
-        switch (document.languageId) {
-            case "json":
-                // try parsing it
-                var sourceObject = JSON.parse(document.getText());
-                // and if parsing succeeds check for the swagger version key
-                if (typeof sourceObject !== 'object' || !sourceObject.swagger)
-                    return false;
-                else
-                    return true;
-            case "yaml":
-            case "yml":
-                // try parsing it
-                var sourceObject = YamlJS.safeLoad(document.getText());
-                // and if parsing succeeds check for the swagger version key
-                if (typeof sourceObject !== 'object' || !sourceObject.swagger)
-                    return false;
-                else
-                    return true;
-            default:
-                return false;
-        }
-    }
-    catch (exc) {
-        // if parsing the document fails try looking for the swagger key
-        var sourceText = document.getText().toLowerCase();
-
-        // if the swagger key cannot be found return false. otherwise assume this is a swagger file
-        // and just formatting or syntax errors prevent parsing.
-        if (sourceText.indexOf("swagger") != -1)
-            return true;
-        else
-            return false;
-    }
-}
-
 /**
  * Activates the extension.
  */
@@ -93,10 +51,6 @@ export function activate(context: ExtensionContext) {
             fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
         }
     };
-
-    // check if this is a swagger definition at all
-    if ((null == window.activeTextEditor) || (isSwaggerDocument(window.activeTextEditor.document) == false))
-        return;
 
     let languageClient = new LanguageClient('swaggitor', 'Swaggitor Server', serverOptions, clientOptions);
 

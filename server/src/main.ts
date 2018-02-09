@@ -36,7 +36,7 @@ documents.listen(connection);
  */
 connection.onInitialize((_params): InitializeResult => {
     // unused
-    workspaceRoot = params.rootPath;
+    // workspaceRoot = params.rootPath;
     // return server caps
     return {
         capabilities: {
@@ -113,56 +113,59 @@ function validateTextDocument(textDocument: TextDocument): void {
     if (isSwaggerDocument(textDocument)) {
         // issue #1
         let documentUri = textDocument.uri;
+
         if (/^win/.test(process.platform)) {
             documentUri = decodeURIComponent(documentUri);
         }
-
         // parse the file on save and send diagnostics about any parser error to the language client.
-        SwaggerParser.parse(documentUri).then(function (_api: any) {
-            // empty the diagnostics information since swagger defintion seems to be correct
-            let diagnostics: Diagnostic[] = [];
-            connection.sendDiagnostics({
-                uri: textDocument.uri,
-                diagnostics
-            });
-            // notify the client to display status bar message
-            connection.sendRequest("validated", null);
-        }).catch(function (err: any) {
-            // generate diagnostics information containing error information
-            let diagnostics: Diagnostic[] = [];
-            var diagnostic = {
-                code: 0,
-                message: err.reason,
-                range: {
-                    start: {
-                        line: 0,
-                        character: 1
+        SwaggerParser.validate(documentUri)
+            .then(function (_api: any) {
+                // empty the diagnostics information since swagger defintion seems to be correct
+                let diagnostics: Diagnostic[] = [];
+                connection.sendDiagnostics({
+                    uri: textDocument.uri,
+                    diagnostics
+                });
+                // notify the client to display status bar message
+                connection.sendRequest("validated", null);
+            })
+            .catch(function (err: any) {
+                // generate diagnostics information containing error information
+                let diagnostics: Diagnostic[] = [];
+                var diagnostic = {
+                    severity: DiagnosticSeverity.Warning,
+                    code: 0,
+                    message: err.reason,
+                    range: {
+                        start: {
+                            line: 0,
+                            character: 1
+                        },
+                        end: {
+                            line: 0,
+                            character: 1
+                        }
                     },
-                    end: {
-                        line: 0,
-                        character: 1
-                    }
-                },
-                source: "Swaggitor"
-            };
-            // if there are error marks provided by the parser use them to mark the error in source
-            if (err.mark) {
-                diagnostic.range.start = diagnostic.range.end = {
-                    line: err.mark.line,
-                    character: err.mark.column
+                    source: "Swaggitor"
                 };
-            }
+                // if there are error marks provided by the parser use them to mark the error in source
+                if (err.mark) {
+                    diagnostic.range.start = diagnostic.range.end = {
+                        line: err.mark.line,
+                        character: err.mark.column
+                    };
+                }
 
-            diagnostics.push(diagnostic);
+                diagnostics.push(diagnostic);
 
-            connection.sendDiagnostics({
-                uri: textDocument.uri,
-                diagnostics
-            });
+                connection.sendDiagnostics({
+                    uri: textDocument.uri,
+                    diagnostics
+                });
 
-            // trigger client to display status bar message
-            connection.sendRequest("validated", err);
-        })
+                // trigger client to display status bar message
+                connection.sendRequest("validated", err);
+            })
     }
 }
 
