@@ -25,6 +25,12 @@
 			"type": "object",
 			"title": "Swaggitor configuration",
 			"properties": {
+				"swaggitor.checkOnChange": {
+					"scope": "resource",
+					"type":"boolean",
+					"default": false,
+					"description": "Controls if checks should occur on file changes or just if document is saved"
+				},
 				"swaggitor.trace.server": {
 					"scope": "window",
 					"type": "string",

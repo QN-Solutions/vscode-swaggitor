@@ -3,7 +3,7 @@
 import * as path from 'path';
 
 import {
-    workspace, Disposable, ExtensionContext, window, TextDocument
+    workspace, Disposable, ExtensionContext, window
 } from 'vscode';
 
 import {
