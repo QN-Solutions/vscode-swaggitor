@@ -169,27 +169,32 @@ function validateTextDocument(textDocument: TextDocument): void {
              * swagger-parser only delivers first issue
              * and unfortunately no row / column information
              */
-            for (let errEntry of err.details) {
-
-                var diagnostic = {
-                    severity: DiagnosticSeverity.Warning,
-                    code: 0,
-                    message: errEntry.message,
-                    range: {
-                        start: {
-                            line: 0,
-                            character: 1
-                        },
-                        end: {
-                            line: 0,
-                            character: 1
-                        }
+            var diagnostic = {
+                severity: DiagnosticSeverity.Warning,
+                code: 0,
+                message: err.message,
+                range: {
+                    start: {
+                        line: 0,
+                        character: 1
                     },
-                    source: "Swaggitor"
-                };
+                    end: {
+                        line: 0,
+                        character: 1
+                    }
+                },
+                source: "Swaggitor"
+            };
 
-                diagnostics.push(diagnostic);
+            // if there are error marks provided by the parser use them to mark the error in source
+            if (err.mark) {
+                diagnostic.range.start = diagnostic.range.end = {
+                    line: err.mark.line,
+                    character: err.mark.column
+                };
             }
+
+            diagnostics.push(diagnostic);
 
             connection.sendDiagnostics({
                 uri: textDocument.uri,
