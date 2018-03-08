@@ -1,38 +1,59 @@
 {
-  "name": "swaggitor",
-  "version": "0.1.1",
-  "description": "Swaggitor - Swagger extension for VSCode",
-  "publisher": "qnsolutions",
-  "main": "./out/src/main.js",
-  "repository": "https://github.com/ChristianKuhn/vscode-swaggitor.git",
-  "engines": {
-    "vscode": "^0.10.10"
-  },
-  "activationEvents": [
-    "onLanguage:yaml",
-    "onLanguage:json"
-  ],
-  "contributes": {
-    "configuration": {
-      "type": "object",
-      "title": "Swaggitor configuration",
-      "properties": {}
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
-    "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Christian Kuhn <c.kuhn@qn-solutions.de> (http://www.qn-solutions.de)",
-  "license": "MIT",
-  "dependencies": {
-    "js-yaml": "^3.6.1",
-    "vscode-languageclient": "^2.3.0"
-  },
-  "devDependencies": {
-    "vscode": "^0.11.14",
-    "typescript": "^1.8.10"
-  }
+	"name": "swaggitor",
+	"description": "Swaggitor - Swagger extension for VSCode",
+	"author": "Christian Kuhn <c.kuhn@qn-solutions.de> (http://www.qn-solutions.de)",
+	"license": "MIT",
+	"version": "1.1.2",
+	"publisher": "qnsolutions",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ChristianKuhn/vscode-swaggitor.git"
+	},
+	"engines": {
+		"vscode": "^1.16.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onLanguage:yaml",
+		"onLanguage:json"
+	],
+	"main": "./out/src/main",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "Swaggitor configuration",
+			"properties": {
+				"swaggitor.checkOnChange": {
+					"scope": "resource",
+					"type":"boolean",
+					"default": false,
+					"description": "Controls if checks should occur on file changes or just if document is saved"
+				},
+				"swaggitor.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VSCode and the language server."
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "tsc -p ./",
+		"compile": "tsc -p ./",
+		"watch": "tsc -w -p ./",
+		"update-vscode": "node ./node_modules/vscode/bin/install",
+		"postinstall": "node ./node_modules/vscode/bin/install"
+	},
+	"dependencies": {
+		"vscode": "^1.1.5",
+		"vscode-languageclient": "^3.4.2"
+	}
 }
